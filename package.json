@@ -1,6 +1,6 @@
 {
   "name": "@mmmbuto/better-sqlite3-termux",
-  "version": "12.8.0-termux.0",
+  "version": "12.8.0-termux.1",
   "description": "better-sqlite3 patched and verified for Termux/Android arm64.",
   "homepage": "https://github.com/DioNanos/better-sqlite3-termux",
   "author": "Joshua Wise <joshuathomaswise@gmail.com>",
@@ -13,19 +13,14 @@
     "binding.gyp",
     "src/**/*.[ch]pp",
     "lib/**",
-    "deps/**"
+    "deps/**",
+    "prebuilds/**"
   ],
   "engines": {
     "node": "20.x || 22.x || 23.x || 24.x || 25.x"
   },
   "dependencies": {
-    "bindings": "^1.5.0",
-    "prebuild-install": "^7.1.1"
-  },
-  "overrides": {
-    "prebuild": {
-      "node-abi": "^4.25.0"
-    }
+    "bindings": "^1.5.0"
   },
   "devDependencies": {
     "chai": "^4.3.8",
@@ -38,7 +33,7 @@
     "sqlite3": "^5.1.6"
   },
   "scripts": {
-    "install": "prebuild-install || node-gyp rebuild --release",
+    "install": "node -e \"if(require('fs').existsSync('prebuilds/'+process.platform+'-'+process.arch+'/better_sqlite3.node'))process.exit(0);process.exit(1)\" || node-gyp rebuild --release",
     "build-release": "node-gyp rebuild --release",
     "build-debug": "node-gyp rebuild --debug",
     "test": "mocha --exit --slow=75 --timeout=5000",

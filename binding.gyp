@@ -9,7 +9,7 @@
       'target_name': 'better_sqlite3',
       'dependencies': ['deps/sqlite3.gyp:sqlite3'],
       'sources': ['src/better_sqlite3.cpp'],
-      'cflags_cc': ['-std=c++20'],
+      'cflags_cc': ['-std=c++20', '-Wno-cast-function-type-mismatch'],
       'xcode_settings': {
         'OTHER_CPLUSPLUSFLAGS': ['-std=c++20', '-stdlib=libc++'],
       },
