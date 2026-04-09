@@ -1,12 +1,12 @@
 {
-  "name": "better-sqlite3",
-  "version": "12.8.0",
-  "description": "The fastest and simplest library for SQLite in Node.js.",
-  "homepage": "http://github.com/WiseLibs/better-sqlite3",
+  "name": "@mmmbuto/better-sqlite3-termux",
+  "version": "12.8.0-termux.0",
+  "description": "better-sqlite3 patched and verified for Termux/Android arm64.",
+  "homepage": "https://github.com/DioNanos/better-sqlite3-termux",
   "author": "Joshua Wise <joshuathomaswise@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git://github.com/WiseLibs/better-sqlite3.git"
+    "url": "git+https://github.com/DioNanos/better-sqlite3-termux.git"
   },
   "main": "lib/index.js",
   "files": [
@@ -45,11 +45,16 @@
     "benchmark": "node benchmark",
     "download": "bash ./deps/download.sh"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "keywords": [
     "sql",
     "sqlite",
     "sqlite3",
+    "termux",
+    "android",
     "transactions",
     "user-defined functions",
     "aggregate functions",

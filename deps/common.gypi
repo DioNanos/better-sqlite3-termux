@@ -4,7 +4,13 @@
 # ===
 
 {
-  'variables': { 'sqlite3%': '' },
+  'variables': {
+    'sqlite3%': '',
+    # Termux/Android node-gyp headers may reference android_ndk_path even when
+    # building native addons outside the NDK environment. Provide a harmless
+    # default so gyp parsing succeeds on Termux.
+    'android_ndk_path%': '.',
+  },
   'target_defaults': {
     'default_configuration': 'Release',
     'msvs_settings': {
