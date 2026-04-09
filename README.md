@@ -1,99 +1,155 @@
-# better-sqlite3 [![Build Status](https://github.com/JoshuaWise/better-sqlite3/actions/workflows/build.yml/badge.svg)](https://github.com/JoshuaWise/better-sqlite3/actions/workflows/build.yml?query=branch%3Amaster)
+# better-sqlite3 Termux
 
-The fastest and simplest library for SQLite in Node.js.
+> Termux-focused fork of upstream `better-sqlite3` with the minimum Android/Termux compatibility patch needed to build and run on ARM64 Termux.
 
-- Full transaction support
-- High performance, efficiency, and safety
-- Easy-to-use synchronous API *(better concurrency than an asynchronous API... yes, you read that correctly)*
-- Support for user-defined functions, aggregates, virtual tables, and extensions
-- 64-bit integers *(invisible until you need them)*
-- Worker thread support *(for large/slow queries)*
+[![npm latest](https://img.shields.io/npm/v/@mmmbuto/better-sqlite3-termux/latest?style=flat-square&logo=npm)](https://www.npmjs.com/package/@mmmbuto/better-sqlite3-termux)
 
-## Help this project stay strong! &#128170;
+---
 
-`better-sqlite3` is used by thousands of developers and engineers on a daily basis. Long nights and weekends were spent keeping this project strong and dependable, with no ask for compensation or funding, until now. If your company uses `better-sqlite3`, ask your manager to consider supporting the project:
+## About
 
-- [Become a GitHub sponsor](https://github.com/sponsors/JoshuaWise)
-- [Become a backer on Patreon](https://www.patreon.com/joshuawise)
-- [Make a one-time donation on PayPal](https://www.paypal.me/joshuathomaswise)
+This fork exists for one reason:
 
-## How other libraries compare
+- keep `better-sqlite3` usable on Android Termux without carrying a broad feature fork
 
-|   |select 1 row &nbsp;`get()`&nbsp;|select 100 rows &nbsp;&nbsp;`all()`&nbsp;&nbsp;|select 100 rows `iterate()` 1-by-1|insert 1 row `run()`|insert 100 rows in a transaction|
-|---|---|---|---|---|---|
-|better-sqlite3|1x|1x|1x|1x|1x|
-|[sqlite](https://www.npmjs.com/package/sqlite) and [sqlite3](https://www.npmjs.com/package/sqlite3)|11.7x slower|2.9x slower|24.4x slower|2.8x slower|15.6x slower|
+The current fork tracks upstream `WiseLibs/better-sqlite3` and applies a minimal Termux/Android compatibility patch so Node.js native builds do not fail on Android gyp headers that reference `android_ndk_path`.
 
-> You can verify these results by [running the benchmark yourself](./docs/benchmark.md).
+### Current Release
+
+- **Package**: `@mmmbuto/better-sqlite3-termux`
+- **Latest**: `12.8.0-termux.0`
+- **Source fork**: `DioNanos/better-sqlite3-termux`
+- **Upstream**: `WiseLibs/better-sqlite3`
+
+### Supported Focus
+
+- Android Termux ARM64
+
+This repo may still be useful as a build base for other Android environments, but the maintained target is native Termux first.
+
+---
+
+## Project Scope
+
+### What We Do
+
+- track upstream `better-sqlite3`
+- keep the patch delta minimal
+- validate native build on real Termux
+- publish a scoped npm package for Termux usage
+
+### What We Do Not Do
+
+- maintain a divergent SQLite feature fork
+- replace upstream for Linux/macOS users
+- carry unrelated API or behavioral changes
+
+---
+
+## Patch Status
+
+Current Termux compatibility change:
+
+- provide a harmless default for `android_ndk_path` in `deps/common.gypi`
+
+Why:
+
+- Node 25 Android headers on this Termux host inject a `common.gypi` include using `android_ndk_path`
+- upstream `better-sqlite3` does not define that variable because it is not normally needed for the package itself
+- on Termux this causes gyp parse failure before compilation even starts
+
+Result on this host:
+
+- package builds successfully with `npm install --omit=dev`
+- runtime smoke test passes on native Termux ARM64
+
+Note:
+
+- upstream dev dependencies such as `sqlite3` may still fail on this host in full dev installs because older nested `node-gyp` code expects Python `distutils`
+- that does not block the production package build of this fork
+
+---
 
 ## Installation
 
+### Termux
+
 ```bash
-npm install better-sqlite3
+pkg update && pkg upgrade -y
+pkg install nodejs-lts clang make python -y
+
+npm install @mmmbuto/better-sqlite3-termux@latest
 ```
 
-> Requires a [currently supported Node.js](https://nodejs.org/en/about/previous-releases) version. Prebuilt binaries are available for [LTS versions](https://nodejs.org/en/about/previous-releases). If you have trouble installing, check the [troubleshooting guide](./docs/troubleshooting.md).
+### In your project
+
+If code expects the upstream import name:
+
+```js
+const Database = require('@mmmbuto/better-sqlite3-termux');
+```
+
+If you want to keep the upstream import name `better-sqlite3`, use an alias in your project:
+
+```json
+{
+  "dependencies": {
+    "better-sqlite3": "npm:@mmmbuto/better-sqlite3-termux@12.8.0-termux.0"
+  }
+}
+```
+
+---
 
 ## Usage
 
 ```js
-const db = require('better-sqlite3')('foobar.db', options);
+const Database = require('@mmmbuto/better-sqlite3-termux');
 
-const row = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
-console.log(row.firstName, row.lastName, row.email);
+const db = new Database('app.db');
+db.exec('CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY, name TEXT)');
+db.prepare('INSERT INTO items (name) VALUES (?)').run('termux');
+
+const row = db.prepare('SELECT * FROM items LIMIT 1').get();
+console.log(row);
+
+db.close();
 ```
 
-Though not required, [it is generally important to set the WAL pragma for performance reasons](https://github.com/WiseLibs/better-sqlite3/blob/master/docs/performance.md).
+---
 
-```js
-db.pragma('journal_mode = WAL');
+## Build From Source
+
+```bash
+git clone https://github.com/DioNanos/better-sqlite3-termux.git
+cd better-sqlite3-termux
+npm install --omit=dev
 ```
 
-##### In ES6 module notation:
+On this Termux target, `npm install --omit=dev` is the relevant production path.
 
-```js
-import Database from 'better-sqlite3';
-const db = new Database('foobar.db', options);
-db.pragma('journal_mode = WAL');
-```
+If you run a full dev install, nested dev dependencies may fail because some older Python/gyp stacks still expect `distutils`.
 
-## Why should I use this instead of [node-sqlite3](https://github.com/mapbox/node-sqlite3)?
+---
 
-- `node-sqlite3` uses asynchronous APIs for tasks that are either CPU-bound or serialized. That's not only bad design, but it wastes tons of resources. It also causes [mutex thrashing](https://en.wikipedia.org/wiki/Resource_contention) which has devastating effects on performance.
-- `node-sqlite3` exposes low-level (C language) memory management functions. `better-sqlite3` does it the JavaScript way, allowing the garbage collector to worry about memory management.
-- `better-sqlite3` is simpler to use, and it provides nice utilities for some operations that are very difficult or impossible in `node-sqlite3`.
-- `better-sqlite3` is much faster than `node-sqlite3` in most cases, and just as fast in all other cases.
-
-#### When is this library not appropriate?
-
-In most cases, if you're attempting something that cannot be reasonably accomplished with `better-sqlite3`, it probably cannot be reasonably accomplished with SQLite in general. For example, if you're executing queries that take one second to complete, and you expect to have many concurrent users executing those queries, no amount of asynchronicity will save you from SQLite's serialized nature. Fortunately, SQLite is very *very* fast. With proper indexing, we've been able to achieve upward of 2000 queries per second with 5-way-joins in a 60 GB database, where each query was handling 5–50 kilobytes of real data.
-
-If you have a performance problem, the most likely causes are inefficient queries, improper indexing, or a lack of [WAL mode](./docs/performance.md)—not `better-sqlite3` itself. However, there are some cases where `better-sqlite3` could be inappropriate:
-
-- If you expect a high volume of concurrent reads each returning many megabytes of data (i.e., videos)
-- If you expect a high volume of concurrent writes (i.e., a social media site)
-- If your database's size is near the terabyte range
-
-For these situations, you should probably use a full-fledged RDBMS such as [PostgreSQL](https://www.postgresql.org/).
-
-## Upgrading
-
-Upgrading your `better-sqlite3` dependency can potentially introduce breaking changes, either in the `better-sqlite3` API (if you upgrade to a new [major version](https://semver.org/)), or between your existing database(s) and the underlying version of SQLite. Before upgrading, review:
-
-* [`better-sqlite3` release notes](https://github.com/WiseLibs/better-sqlite3/releases)
-* [SQLite release history](https://www.sqlite.org/changes.html)
-
-# Documentation
+## Documentation
 
 - [API documentation](./docs/api.md)
-- [Performance](./docs/performance.md) (also see [benchmark results](./docs/benchmark.md))
-- [64-bit integer support](./docs/integer.md)
-- [Worker thread support](./docs/threads.md)
-- [Unsafe mode (advanced)](./docs/unsafe.md)
-- [SQLite compilation (advanced)](./docs/compilation.md)
-- [Contribution rules](./docs/contribution.md)
-- [Code of conduct](./docs/conduct.md)
+- [Performance](./docs/performance.md)
+- [SQLite compilation notes](./docs/compilation.md)
+- [Troubleshooting](./docs/troubleshooting.md)
+- [Upstream project](https://github.com/WiseLibs/better-sqlite3)
 
-# License
+---
 
-[MIT](./LICENSE)
+## Maintenance
+
+This is a community-maintained compatibility fork for the `mmmbuto` stack and related Termux projects such as `nexuscrew`, `pixel-controller`, and local MCP services that need reliable embedded SQLite on Android.
+
+---
+
+## License
+
+MIT, inherited from upstream `better-sqlite3`.
+
+See [LICENSE](./LICENSE).
