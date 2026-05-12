@@ -153,3 +153,14 @@ This is a community-maintained compatibility fork for the `mmmbuto` stack and re
 MIT, inherited from upstream `better-sqlite3`.
 
 See [LICENSE](./LICENSE).
+
+---
+
+## Fork maintainer
+
+This fork is maintained by [DioNanos](https://github.com/DioNanos) for Termux/Android use.
+
+- Fork issues (build, packaging, mobile-specific): **dev@mmmbuto.com**
+- Fork security disclosures: **security@mmmbuto.com**
+
+Upstream-relevant issues should be reported on the upstream project.
